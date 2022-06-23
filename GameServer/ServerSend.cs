@@ -9,7 +9,7 @@ namespace GameServer
    class ServerSend
     {
         private static void SendTCPData(int _id,Packet _packet)
-        {
+        {  
             _packet.WriteLength();
             Server.clients[_id].tcp.SendData(_packet);
 

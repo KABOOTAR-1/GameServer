@@ -43,16 +43,16 @@ namespace GameServer
                 
                 receiveBuffer= new byte[dataBufferSize];    
                 stream.BeginRead(receiveBuffer, 0, dataBufferSize,ReceiveCallBacks,null);
-                ServerSend.Welcome(id, "Welcome");
+                ServerSend.Welcome(id, "Welcome to the server");
             }
 
             public void SendData(Packet _packet)
             {
                 try
                 {
-                    if (socket != null)
+                    if (socket != null)  
                     {
-                        stream.BeginRead(_packet.ToArray(),0,_packet.Length(),null,null);
+                        stream.BeginWrite(_packet.ToArray(),0,_packet.Length(),null,null);
                     }
                 }
                 catch(Exception e)
