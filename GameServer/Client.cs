@@ -26,6 +26,7 @@ namespace GameServer
             public TcpClient socket;
             private readonly int id;
             private NetworkStream stream;
+            private Packet receievedData;
             private byte[] receiveBuffer;
 
             public TCP(int _id)
@@ -38,7 +39,7 @@ namespace GameServer
                 socket = _socket;
                 socket.ReceiveBufferSize = dataBufferSize;
                 socket.SendBufferSize = dataBufferSize;
-
+                receievedData = new Packet();
                 stream = socket.GetStream();      
                 
                 receiveBuffer= new byte[dataBufferSize];    
@@ -73,6 +74,8 @@ namespace GameServer
 
                     byte[] _data=new byte[byelength];
                     Array.Copy(receiveBuffer, _data, byelength);
+
+                    receievedData.Reset(HandleData(_data));
                     stream.BeginRead(receiveBuffer,0,dataBufferSize,ReceiveCallBacks,null); 
                 }
                 catch(Exception ex)
@@ -81,6 +84,52 @@ namespace GameServer
                 }
 
             }
+
+            private bool HandleData(byte[] _data)
+            {
+                int PacketLength = 0;
+                receievedData.SetBytes(_data);
+
+                if (receievedData.UnreadLength() >= 4)
+                {
+                    PacketLength = receievedData.ReadInt();
+                    if (PacketLength <= 0)
+                    {
+                        return true;
+                    }
+                }
+
+                while (PacketLength > 0 && PacketLength <= receievedData.UnreadLength())
+                {
+                    byte[] _packetBytes = receievedData.ReadBytes(PacketLength);
+                    ThreadManager.ExecuteOnMainThread(() =>
+                    {
+                        using (Packet _packet = new Packet(_packetBytes))
+                        {
+                            int _packetit = _packet.ReadInt();
+                            Server.packetHandlers[_packetit](id,_packet);
+
+                        }
+                    });
+                    PacketLength = 0;
+
+                    if (receievedData.UnreadLength() >= 4)
+                    {
+                        PacketLength = receievedData.ReadInt();
+                        if (PacketLength <= 0)
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                if (PacketLength <= 1)
+                    return true;
+
+
+                return false;
+            }
         }
     }
-}
+    }
+
