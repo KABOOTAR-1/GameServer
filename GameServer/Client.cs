@@ -8,17 +8,18 @@ using System.Net.Sockets;
 
 namespace GameServer
 {
-     class Client
+    class Client
     {
         public static int dataBufferSize = 4096;
         public int id;
         public TCP tcp;
-       
+        public UDP udp;
 
         public Client(int _id)
         {
             this.id = _id;
             tcp = new TCP(id);
+            udp = new UDP(id);
         }
 
         public class TCP
@@ -40,10 +41,10 @@ namespace GameServer
                 socket.ReceiveBufferSize = dataBufferSize;
                 socket.SendBufferSize = dataBufferSize;
                 receievedData = new Packet();
-                stream = socket.GetStream();      
-                
-                receiveBuffer= new byte[dataBufferSize];    
-                stream.BeginRead(receiveBuffer, 0, dataBufferSize,ReceiveCallBacks,null);
+                stream = socket.GetStream();
+
+                receiveBuffer = new byte[dataBufferSize];
+                stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallBacks, null);
                 ServerSend.Welcome(id, "Welcome to the server");
             }
 
@@ -51,12 +52,12 @@ namespace GameServer
             {
                 try
                 {
-                    if (socket != null)  
+                    if (socket != null)
                     {
-                        stream.BeginWrite(_packet.ToArray(),0,_packet.Length(),null,null);
+                        stream.BeginWrite(_packet.ToArray(), 0, _packet.Length(), null, null);
                     }
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     Console.WriteLine($" Error sending the data to player{id} via TCP:{e}");
                 }
@@ -72,13 +73,13 @@ namespace GameServer
                         return;
                     }
 
-                    byte[] _data=new byte[byelength];
+                    byte[] _data = new byte[byelength];
                     Array.Copy(receiveBuffer, _data, byelength);
 
                     receievedData.Reset(HandleData(_data));
-                    stream.BeginRead(receiveBuffer,0,dataBufferSize,ReceiveCallBacks,null); 
+                    stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallBacks, null);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Console.WriteLine($"Error receivng TCP data: {ex}");
                 }
@@ -107,7 +108,7 @@ namespace GameServer
                         using (Packet _packet = new Packet(_packetBytes))
                         {
                             int _packetit = _packet.ReadInt();
-                            Server.packetHandlers[_packetit](id,_packet);
+                            Server.packetHandlers[_packetit](id, _packet);
 
                         }
                     });
@@ -130,6 +131,44 @@ namespace GameServer
                 return false;
             }
         }
+
+        public class UDP
+        {
+            public IPEndPoint endPoint;
+            public int id;
+
+            public UDP(int _id)
+            {
+                id = _id;
+            }
+
+            public void Connect(IPEndPoint _endpoint)
+            {
+                endPoint = _endpoint;
+                ServerSend.UDPTest(id);
+            }
+
+            public void SendData(Packet _packet)
+            {
+                Server.SendUDPData(endPoint, _packet);
+            }
+
+            public void HandleData(Packet _packet)
+            {
+                int packetlength = _packet.ReadInt();
+                byte[] packetData = _packet.ReadBytes(packetlength);
+
+                ThreadManager.ExecuteOnMainThread(() =>
+                {
+                    using (Packet _packet = new Packet(packetData))
+                    {
+                        int _packetId = _packet.ReadInt();
+                        Server.packetHandlers[_packetId](id, _packet);
+                    }
+                });
+            }
+        }
+       
     }
     }
 
