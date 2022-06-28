@@ -73,16 +73,18 @@ namespace GameServer
             }
         }
 
-        
-        public static void UDPTest(int _toClientId)
+        public static void SpawnPlayer(int _toclient,Player _player)
         {
-            using (Packet _packet = new Packet((int)ServerPackets.udptest))
+            using (Packet _packet= new Packet((int)ServerPackets.spawnPlayer))
             {
-                _packet.Write("A test Packet for UDP");
-                SendUDPData(_toClientId,_packet);
+                _packet.Write(_player.id);
+                _packet.Write(_player.UserName);
+                _packet.Write(_player.position);
+                _packet.Write(_player.rotation);
+
+                SendTCPData(_toclient,_packet);
             }
         }
-        
         #endregion
     }
 }

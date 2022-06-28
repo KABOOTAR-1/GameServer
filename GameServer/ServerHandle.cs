@@ -19,12 +19,9 @@ namespace GameServer
             {
                 Console.WriteLine($"Player \"{_username}\"(ID:{_fromClient}) has assumed the wromg cliend ID :({_clientIdCheck}");
             }
+            Server.clients[_fromClient].SendIntoGame(_username);
         }
 
-        public static void UDPTestReceived(int fromClient, Packet _packet)
-        {
-            string msg = _packet.ReadString();
-            Console.WriteLine($" Packet Received via UDP connating msg {msg}");
-        }
+        
     }
 }

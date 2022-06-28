@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Numerics;
 
 namespace GameServer
 {
@@ -8,14 +9,17 @@ namespace GameServer
     public enum ServerPackets
     {
         welcome = 1,
-        udptest
+        spawnPlayer,
+        playerPosition,
+        playerRotation,
+       
     }
 
     /// <summary>Sent from client to server.</summary>
     public enum ClientPackets
     {
         welcomeReceived = 1,
-        udpTestReceive
+        playerMovement
     }
 
     public class Packet : IDisposable
@@ -158,6 +162,25 @@ namespace GameServer
         {
             Write(_value.Length); // Add the length of the string to the packet
             buffer.AddRange(Encoding.ASCII.GetBytes(_value)); // Add the string itself
+        }
+
+        /// <summary>Adds a Vector3to the packet.</summary>
+        /// <param name="_value">The Vector3 to add.</param>
+        public void Write(Vector3 _value)
+        {
+            Write(_value.X);
+            Write(_value.Y);
+            Write(_value.Z);
+        }
+
+        /// <summary>Adds a Quaternions to the packet.</summary>
+        /// <param name="_value">The Quaternions to add.</param>
+        public void Write(Quaternion _value)
+        {
+            Write(_value.X);
+            Write(_value.Y);
+            Write(_value.Z);
+            Write(_value.W);
         }
         #endregion
 
@@ -331,8 +354,17 @@ namespace GameServer
             }
         }
         #endregion
+        public Vector3 ReadVector3(bool _movePos = true)
+        {
+            return new Vector3(ReadFloat(_movePos), ReadFloat(_movePos), ReadFloat(_movePos));
+        }
 
+        public Quaternion ReadQuaternions(bool _movePos = true)
+        {
+            return new Quaternion(ReadFloat(_movePos), ReadFloat(_movePos), ReadFloat(_movePos),ReadFloat(_movePos));
+        }
         private bool disposed = false;
+
 
         protected virtual void Dispose(bool _disposing)
         {
