@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Numerics;
 
 namespace GameServer
 {
@@ -22,6 +23,18 @@ namespace GameServer
             Server.clients[_fromClient].SendIntoGame(_username);
         }
 
-        
+        internal static void PlayerMovement( int _fromCLient, Packet _packet)
+        {
+            bool[] inputs = new bool[_packet.ReadInt()]; 
+            for(int i=0; i < inputs.Length; i++)
+            {
+                inputs[i] = _packet.ReadBool();
+            }
+
+            Quaternion _rotation = _packet.ReadQuaternions();
+
+            Server.clients[_fromCLient].player.SetInput( inputs, _rotation);
+            
+        }
     }
 }

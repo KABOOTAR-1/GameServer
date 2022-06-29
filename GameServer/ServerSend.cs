@@ -59,7 +59,6 @@ namespace GameServer
             }
         }
 
-
         #region Packets
 
         public static void Welcome(int _toclientid,string _msg)
@@ -85,6 +84,29 @@ namespace GameServer
                 SendTCPData(_toclient,_packet);
             }
         }
+
+        internal static void PlayerPosition(Player player)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.playerPosition))
+            {
+                packet.Write(player.id);
+                packet.Write(player.position);
+
+                SendUDPToAll(packet);
+            }
+        }
+        internal static void PlayerRotation(Player player)
+        {
+            using(Packet packet= new Packet((int)ServerPackets.playerRotation))
+            {
+                packet.Write(player.id);
+                packet.Write(player.rotation);
+
+                SendUDPToAll(player.id ,packet);
+            }
+        }
+
+        
         #endregion
     }
 }
