@@ -72,6 +72,7 @@ namespace GameServer
                     if (byelength <= 0)
                     {
                         Server.clients[id].Disconnect();
+                        return;
                     }
 
                     byte[] _data = new byte[byelength];
@@ -136,9 +137,10 @@ namespace GameServer
             public void Disconnect()
             {
                 socket.Close();
+                stream = null; 
                 receievedData = null;
                 receiveBuffer = null;
-                stream = null;
+               
                 socket = null;
         }
         }
